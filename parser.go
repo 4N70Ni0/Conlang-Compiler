@@ -58,6 +58,17 @@ func (par *Parser) Abort(message string) {
 	log.Fatal("Error. " + message)
 }
 
+func (par *Parser) CheckDeclaredIdent() {
+	tk := par.CurToken
+	par.Match(IDENT)
+	for _, sym := range par.Symbols {
+		if tk.Text == sym.Name {
+			return
+		}
+	}
+	par.Abort("Undeclared identifier '" + tk.Text + "'")
+}
+
 // Parsing
 
 func (par *Parser) Nl() {
@@ -98,32 +109,27 @@ func (par *Parser) Statement() {
 			par.NextToken()
 		}
 
-		// TODO Check if idents are declared or not
+		// OPIDENT used by STATEMENT-DECLARATION.
 	} else if par.CheckToken(IDENT) || par.CheckToken(OPIDENT) {
 		// (OPIDENT | IDENT)+ VALUES
 		if par.CheckPeek(COMMA) || par.CheckPeek(VALUES) {
 			fmt.Println("STATEMENT-DEFINE")
-			par.NextToken()
+			par.CheckDeclaredIdent()
 
 			// Loop through the idents until the values are reached.
 			for !par.CheckToken(VALUES) {
 				par.Match(COMMA)
-				if par.CheckToken(OPIDENT) || par.CheckToken(IDENT) {
-					par.NextToken()
-				}
+				par.CheckDeclaredIdent()
 			}
 			par.Match(VALUES)
 
-			// TODO Check if idents are declared or not
 			// (IDENT | OPIDENT) "IF" (IDENT | OPIDENT) "IS" ["NOT"] VALUES
 		} else if par.CheckPeek(IF) {
 			fmt.Println("STATEMENT-IF")
-			par.NextToken()
-			par.NextToken()
+			par.CheckDeclaredIdent()
+			par.Match(IF)
 
-			if par.CheckToken(IDENT) || par.CheckToken(OPIDENT) {
-				par.NextToken()
-			}
+			par.CheckDeclaredIdent()
 			par.Match(IS)
 			if par.CheckToken(NOT) {
 				par.NextToken()
