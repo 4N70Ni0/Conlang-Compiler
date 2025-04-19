@@ -59,14 +59,12 @@ func (par *Parser) Abort(message string) {
 }
 
 func (par *Parser) CheckDeclaredIdent() {
-	tk := par.CurToken
-	par.Match(IDENT)
 	for _, sym := range par.Symbols {
-		if tk.Text == sym.Name {
+		if par.CurToken.Text == sym.Name {
 			return
 		}
 	}
-	par.Abort("Undeclared identifier '" + tk.Text + "'")
+	par.Abort("Undeclared identifier '" + par.CurToken.Text + "'")
 }
 
 // Parsing
@@ -114,26 +112,38 @@ func (par *Parser) Statement() {
 		// (OPIDENT | IDENT)+ VALUES
 		if par.CheckPeek(COMMA) || par.CheckPeek(VALUES) {
 			fmt.Println("STATEMENT-DEFINE")
-			par.CheckDeclaredIdent()
+
+			if par.CheckToken(IDENT) {
+				par.CheckDeclaredIdent()
+				par.Match(IDENT)
+			}
 
 			// Loop through the idents until the values are reached.
 			for !par.CheckToken(VALUES) {
 				par.Match(COMMA)
-				par.CheckDeclaredIdent()
+				if par.CheckToken(IDENT) {
+					par.CheckDeclaredIdent()
+					par.Match(IDENT)
+				}
 			}
 			par.Match(VALUES)
 
-			// (IDENT | OPIDENT) "IF" (IDENT | OPIDENT) "IS" ["NOT"] VALUES
-		} else if par.CheckPeek(IF) {
+			// TODO: Redefine IF with SKIP
+			// SKIP OPIDENT "IF" (IDENT | OPIDENT) "IS" VALUES
+		} else if par.CheckToken(SKIP) {
 			fmt.Println("STATEMENT-IF")
-			par.CheckDeclaredIdent()
+			par.Match(SKIP)
+			if par.CheckToken(OPIDENT) {
+				par.CheckDeclaredIdent()
+				par.Match(OPIDENT)
+			}
 			par.Match(IF)
 
-			par.CheckDeclaredIdent()
-			par.Match(IS)
-			if par.CheckToken(NOT) {
+			if par.CheckToken(IDENT) || par.CheckToken(OPIDENT) {
+				par.CheckDeclaredIdent()
 				par.NextToken()
 			}
+			par.Match(IS)
 			par.Match(VALUES)
 
 		} else if (par.CheckPeek(IDENT) || par.CheckPeek(OPIDENT)) || par.CheckPeek(NEWLINE) {

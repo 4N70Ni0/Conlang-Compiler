@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"slices"
 )
 
 type Letter struct {
@@ -23,16 +24,37 @@ type Word struct {
 
 func GenSyllable(syllable Syllable) string {
 	syll := ""
+	value := ""
+	chosenLetters := map[string]string{}
 
 	for _, letter := range syllable.Letters {
 		// Because it's optional, it may be omitted.
 		if letter.IsOptional && rand.Intn(2) == 0 {
 			continue
 		}
-		// TODO Add a map to check previous letters with the conditions.
-		// Conditions
+		// BEGIN Conditions
+		// SKIP G IF C1 IS J OR W
+		if letter.Name == "G" {
+			if val, ok := chosenLetters["C1"]; ok {
+				vals := []string{"j", "w"}
+				if slices.Contains(vals, val) {
+					continue
+				}
+			}
+		}
+		if letter.Name == "C3" {
+			if val, ok := chosenLetters["C2"]; ok {
+				vals := []string{"r", "s"}
+				if slices.Contains(vals, val) {
+					continue
+				}
+			}
+		}
+		// END
 
-		syll += letter.Values[rand.Intn(len(letter.Values))]
+		value = letter.Values[rand.Intn(len(letter.Values))]
+		chosenLetters[letter.Name] = value
+		syll += value
 	}
 
 	return syll
@@ -50,7 +72,7 @@ func GenWord(word Word) string {
 }
 
 func main() {
-	// Declarations + definition
+	// BEGIN Declarations + definition
 	c1 := Letter{
 		Name:       "C1",
 		Values:     []string{"p", "t", "k", "m", "n", "b", "f", "th", "d", "s", "z", "sh", "c", "x", "g", "l", "r"},
@@ -76,19 +98,19 @@ func main() {
 		Values:     []string{"r", "s"},
 		IsOptional: true,
 	}
-
 	syllable := Syllable{
 		Letters: []Letter{c1, g, v, c2, c3},
 	}
-
 	word := Word{
 		Syllable: syllable,
 		MinSylls: 1,
 		MaxSylls: 4,
 	}
+	// END
 
-	// Printing
+	// BEGIN Printing
 	for wrd := 0; wrd < 10; wrd++ {
 		fmt.Println(GenWord(word))
 	}
+	// END
 }

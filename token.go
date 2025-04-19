@@ -21,6 +21,7 @@ const (
 	WITH      = 106
 	SYLLABLES = 107
 	ANY       = 108
+	SKIP      = 109
 	// Operator
 	OPPAR = 201 // (
 	CLPAR = 202 // )
