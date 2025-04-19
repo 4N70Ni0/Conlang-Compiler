@@ -96,10 +96,10 @@ func (lex *Lexer) GetToken() Token {
 		}
 
 		startPos := lex.CurPos
-		for lex.CurChar != "\n" {
+		for lex.Peek() != "\n" {
 			lex.NextChar()
 		}
-		tokText := lex.Source[startPos : lex.CurPos-1]
+		tokText := lex.Source[startPos : lex.CurPos+1]
 		token = Token{tokText, VALUES}
 
 	// Open parenthesis token.
@@ -124,9 +124,11 @@ func (lex *Lexer) GetToken() Token {
 		}
 
 		if IsKeyword(tokText) {
-			lex.Abort("Reserved word '" + tokText + "' cannot be inside a optional ident declaration.")
+			lex.Abort("Reserved word '" + tokText + "' cannot be inside a ident declaration.")
+			// lex.Abort("Reserved word '" + tokText + "' cannot be inside a optional ident declaration.")
 		}
-		token = Token{tokText, OPIDENT}
+		// token = Token{tokText, OPIDENT}
+		token = Token{tokText, IDENT}
 
 	// Uknown token.
 	default:
@@ -162,22 +164,7 @@ func (lex *Lexer) GetToken() Token {
 				lex.NextChar()
 			}
 			tokText := lex.Source[startPos : lex.CurPos+1]
-
-			if lex.Peek() == " " {
-				lex.SkipWhitespace()
-			} else {
-				lex.NextChar()
-			}
-
-			if lex.CurChar == "," { // RANGE
-				for lex.Peek() != "\n" {
-					lex.NextChar()
-
-				}
-				tokText := lex.Source[startPos:lex.CurPos]
-				// fmt.Println(tokText, "VALUES")
-				token = Token{tokText, VALUES}
-			} else if IsKeyword(tokText) { // KEYWORD
+			if IsKeyword(tokText) { // KEYWORD
 				token = Token{tokText, GetKeywordKind(tokText)}
 			} else { // IDENT
 				token = Token{tokText, IDENT}
@@ -187,6 +174,9 @@ func (lex *Lexer) GetToken() Token {
 			lex.Abort("Uknown token: " + lex.CurChar)
 		}
 	}
+
+	// fmt.Println("TOKEN:", token)
+	// fmt.Println("TOKEN:", token, "CURCHAR: '", lex.CurChar, "'")
 
 	lex.NextChar()
 	return token

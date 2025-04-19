@@ -9,12 +9,14 @@ type Parser struct {
 	lex       Lexer
 	CurToken  Token
 	PeekToken Token
+	ErrLine   int
 }
 
 func (par *Parser) Init(lexer Lexer) {
 	par.lex = lexer
 	par.CurToken = Token{}
 	par.PeekToken = Token{}
+	par.ErrLine = 1
 	par.NextToken()
 	par.NextToken()
 }
@@ -32,7 +34,7 @@ func (par *Parser) CheckPeek(kind TokenType) bool {
 // Try to match current token. If not, error. Advances the current token.
 func (par *Parser) Match(kind TokenType) {
 	if !par.CheckToken(kind) {
-		log.Fatal("Expected token ", kind, ", got token ", par.CurToken.Kind)
+		log.Fatal("Expected token '", kind, "' in line ", par.ErrLine, ", got token '", par.CurToken.Kind, "'")
 	}
 	par.NextToken()
 }
@@ -56,9 +58,11 @@ func (par *Parser) Nl() {
 	if !par.CheckToken(EOF) {
 		// Require at least one new line otherwise, gives error.
 		par.Match(NEWLINE)
+		par.ErrLine++
 		// Allow extra newlines.
 		for par.CheckToken(NEWLINE) {
 			par.NextToken()
+			par.ErrLine++
 		}
 	}
 }
@@ -86,20 +90,45 @@ func (par *Parser) Statement() {
 			par.NextToken()
 		}
 
-		// (IDENT | OPIDENT) "IF" (IDENT | OPIDENT) "IS" ["NOT"] VALUES
-	} else if (par.CheckToken(IDENT) || par.CheckToken(OPIDENT)) && par.CheckPeek(IF) {
-		fmt.Println("STATEMENT-IF")
-		par.NextToken()
-		par.NextToken()
+	} else if par.CheckToken(IDENT) || par.CheckToken(OPIDENT) {
+		// (OPIDENT | IDENT)+ VALUES
+		if par.CheckPeek(COMMA) || par.CheckPeek(VALUES) {
+			fmt.Println("STATEMENT-DEFINE")
+			par.NextToken()
 
-		if par.CheckToken(IDENT) || par.CheckToken(OPIDENT) {
+			// Loop through the idents until the values are reached.
+			for !par.CheckToken(VALUES) {
+				par.Match(COMMA)
+				if par.CheckToken(OPIDENT) || par.CheckToken(IDENT) {
+					par.NextToken()
+				}
+			}
+			par.Match(VALUES)
+
+			// (IDENT | OPIDENT) "IF" (IDENT | OPIDENT) "IS" ["NOT"] VALUES
+		} else if par.CheckPeek(IF) {
+			fmt.Println("STATEMENT-IF")
 			par.NextToken()
-		}
-		par.Match(IS)
-		if par.CheckToken(NOT) {
 			par.NextToken()
+
+			if par.CheckToken(IDENT) || par.CheckToken(OPIDENT) {
+				par.NextToken()
+			}
+			par.Match(IS)
+			if par.CheckToken(NOT) {
+				par.NextToken()
+			}
+			par.Match(VALUES)
+
+		} else if par.CheckPeek(IDENT) || par.CheckPeek(NEWLINE) {
+			fmt.Println("STATEMENT-DECLARATION")
+			par.Match(IDENT) // or just NextToken?
+
+			for !par.CheckPeek(NEWLINE) {
+				par.Match(IDENT)
+			}
+			par.Match(IDENT)
 		}
-		par.Match(VALUES)
 	}
 
 	par.Nl()

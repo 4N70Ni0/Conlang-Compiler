@@ -29,6 +29,57 @@ const (
 	DASH  = 205
 )
 
+func (tt TokenType) String() string {
+	var name string
+
+	switch tt {
+	case EOF:
+		name = "EOF"
+	case NEWLINE:
+		name = "NEWLINE"
+	case NUMBER:
+		name = "NUMBER"
+	case IDENT:
+		name = "IDENT"
+	case OPIDENT:
+		name = "OPIDENT"
+	case VALUES:
+		name = "VALUES"
+	case RANGE:
+		name = "RANGE"
+	case IF:
+		name = "IF"
+	case IS:
+		name = "IS"
+	case NOT:
+		name = "NOT"
+	case PRINT:
+		name = "PRINT"
+	case WORDS:
+		name = "WORDS"
+	case WITH:
+		name = "WITH"
+	case SYLLABLES:
+		name = "SYLLABLES"
+	case ANY:
+		name = "ANY"
+	case OPPAR:
+		name = "OPPAR"
+	case CLPAR:
+		name = "CLPAR"
+	case COLON:
+		name = "COLON"
+	case COMMA:
+		name = "COMMA"
+	case DASH:
+		name = "DASH"
+	default:
+		name = "???"
+	}
+
+	return name
+}
+
 type Token struct {
 	Text string
 	Kind TokenType

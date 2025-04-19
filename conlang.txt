@@ -1,15 +1,15 @@
 # Declarations
-# (C1)(G)V(C2)(C3)
+(C1)(G)V(C2)(C3)
 
 # Definitions
-# C1, C2: p, t, k, m, n, b, f, th, d, s, z, sh, c, x, g, l, r
-# V: a, e, i, o, u
-# G: j, w
-# C3: r, s
+C1, C2: p, t, k, m, n, b, f, th, d, s, z, sh, c, x, g, l, r
+V: a, e, i, o, u
+G: j, w
+C3: r, s
 
 # Conditions
-G IF C1 IS NOT j, w
-C3 IF C2 IS NOT r, s
+G IF C1 IS NOT : j, w
+C3 IF C2 IS NOT : r, s
 
 # Printing
 PRINT 10 WORDS WITH 1-4 SYLLABLES
