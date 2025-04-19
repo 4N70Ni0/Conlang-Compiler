@@ -124,11 +124,11 @@ func (lex *Lexer) GetToken() Token {
 		}
 
 		if IsKeyword(tokText) {
-			lex.Abort("Reserved word '" + tokText + "' cannot be inside a ident declaration.")
-			// lex.Abort("Reserved word '" + tokText + "' cannot be inside a optional ident declaration.")
+			// lex.Abort("Reserved word '" + tokText + "' cannot be inside a ident declaration.")
+			lex.Abort("Reserved word '" + tokText + "' cannot be inside a optional ident declaration.")
 		}
-		// token = Token{tokText, OPIDENT}
-		token = Token{tokText, IDENT}
+		token = Token{tokText, OPIDENT}
+		// token = Token{tokText, IDENT}
 
 	// Uknown token.
 	default:

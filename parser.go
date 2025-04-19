@@ -3,12 +3,19 @@ package main
 import (
 	"fmt"
 	"log"
+	"slices"
 )
+
+type Symbol struct {
+	Name       string
+	IsOptional bool
+}
 
 type Parser struct {
 	lex       Lexer
 	CurToken  Token
 	PeekToken Token
+	Symbols   []Symbol // Variables declared.
 	ErrLine   int
 }
 
@@ -16,6 +23,7 @@ func (par *Parser) Init(lexer Lexer) {
 	par.lex = lexer
 	par.CurToken = Token{}
 	par.PeekToken = Token{}
+	par.Symbols = []Symbol{}
 	par.ErrLine = 1
 	par.NextToken()
 	par.NextToken()
@@ -90,6 +98,7 @@ func (par *Parser) Statement() {
 			par.NextToken()
 		}
 
+		// TODO Check if idents are declared or not
 	} else if par.CheckToken(IDENT) || par.CheckToken(OPIDENT) {
 		// (OPIDENT | IDENT)+ VALUES
 		if par.CheckPeek(COMMA) || par.CheckPeek(VALUES) {
@@ -105,6 +114,7 @@ func (par *Parser) Statement() {
 			}
 			par.Match(VALUES)
 
+			// TODO Check if idents are declared or not
 			// (IDENT | OPIDENT) "IF" (IDENT | OPIDENT) "IS" ["NOT"] VALUES
 		} else if par.CheckPeek(IF) {
 			fmt.Println("STATEMENT-IF")
@@ -120,14 +130,24 @@ func (par *Parser) Statement() {
 			}
 			par.Match(VALUES)
 
-		} else if par.CheckPeek(IDENT) || par.CheckPeek(NEWLINE) {
+		} else if (par.CheckPeek(IDENT) || par.CheckPeek(OPIDENT)) || par.CheckPeek(NEWLINE) {
 			fmt.Println("STATEMENT-DECLARATION")
-			par.Match(IDENT) // or just NextToken?
 
-			for !par.CheckPeek(NEWLINE) {
-				par.Match(IDENT)
+			// par.Match(IDENT) // or just NextToken?
+
+			for par.CheckToken(IDENT) || par.CheckToken(OPIDENT) {
+				symbol := Symbol{
+					Name:       par.CurToken.Text,
+					IsOptional: par.CheckToken(OPIDENT),
+				}
+				if !slices.Contains(par.Symbols, symbol) {
+					par.Symbols = append(par.Symbols, symbol)
+				} else {
+					par.Abort("Variable '" + symbol.Name + "' cannot be re-declared.")
+				}
+				par.NextToken()
 			}
-			par.Match(IDENT)
+			// fmt.Println(par.Symbols)
 		}
 	}
 
